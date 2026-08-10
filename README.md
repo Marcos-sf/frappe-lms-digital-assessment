@@ -11,8 +11,8 @@ Enrollment, Quiz and Question doctypes rather than reinventing them.
 
 | | |
 |---|---|
-| **Start Time** | 2026-08-10, 1:30 PM IST |
-| **End Time** | 2026-08-10, 3:30 PM IST |
+| **Start Time** | 2026-08-10, 4:30 PM IST |
+| **End Time** | 2026-08-10, 6:30 PM IST |
 | **Total Duration** | 2 hours |
 
 ---
