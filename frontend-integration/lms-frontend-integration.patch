@@ -1,0 +1,94 @@
+diff --git a/frontend/components.d.ts b/frontend/components.d.ts
+index 6bd13a2..d95c4de 100644
+--- a/frontend/components.d.ts
++++ b/frontend/components.d.ts
+@@ -16,6 +16,7 @@ declare module 'vue' {
+     AppSidebar: typeof import('./src/components/Sidebar/AppSidebar.vue')['default']
+     AssessmentModal: typeof import('./src/components/Modals/AssessmentModal.vue')['default']
+     AssessmentPlugin: typeof import('./src/components/AssessmentPlugin.vue')['default']
++    AssessmentTimer: typeof import('./src/components/AssessmentTimer.vue')['default']
+     Assignment: typeof import('./src/components/Assignment.vue')['default']
+     AssignmentForm: typeof import('./src/components/Modals/AssignmentForm.vue')['default']
+     AudioBlock: typeof import('./src/components/AudioBlock.vue')['default']
+@@ -54,6 +55,7 @@ declare module 'vue' {
+     CourseReviews: typeof import('./src/components/CourseReviews.vue')['default']
+     CreateOutline: typeof import('./src/components/CreateOutline.vue')['default']
+     DateRange: typeof import('./src/components/Common/DateRange.vue')['default']
++    DeclarationStage: typeof import('./src/components/Assessments/DeclarationStage.vue')['default']
+     DeleteConfirmDialog: typeof import('./src/components/Settings/Raven/DeleteConfirmDialog.vue')['default']
+     DesktopLayout: typeof import('./src/components/Layouts/DesktopLayout.vue')['default']
+     DiscussionModal: typeof import('./src/components/Modals/DiscussionModal.vue')['default']
+@@ -101,7 +103,6 @@ declare module 'vue' {
+     LMSLogo: typeof import('./src/components/Icons/LMSLogo.vue')['default']
+     LucideChevronLeft: typeof import('~icons/lucide/chevron-left')['default']
+     LucideChevronRight: typeof import('~icons/lucide/chevron-right')['default']
+-    LucidePlus: typeof import('~icons/lucide/plus')['default']
+     LucideStar: typeof import('~icons/lucide/star')['default']
+     LucideX: typeof import('~icons/lucide/x')['default']
+     MappingListTable: typeof import('./src/components/Settings/Raven/MappingListTable.vue')['default']
+@@ -133,11 +134,13 @@ declare module 'vue' {
+     Quiz: typeof import('./src/components/Quiz.vue')['default']
+     QuizBlock: typeof import('./src/components/QuizBlock.vue')['default']
+     QuizInVideo: typeof import('./src/components/Modals/QuizInVideo.vue')['default']
++    QuizStage: typeof import('./src/components/Assessments/QuizStage.vue')['default']
+     RavenNotInstalledBanner: typeof import('./src/components/Settings/Raven/RavenNotInstalledBanner.vue')['default']
+     RavenSettings: typeof import('./src/components/Settings/Raven/RavenSettings.vue')['default']
+     RelatedCourses: typeof import('./src/components/RelatedCourses.vue')['default']
+     ResponsiveListView: typeof import('./src/components/ResponsiveListView.vue')['default']
+     ReviewModal: typeof import('./src/components/Modals/ReviewModal.vue')['default']
++    ReviewSummary: typeof import('./src/components/Assessments/ReviewSummary.vue')['default']
+     RichTextEditor: typeof import('./src/components/RichTextEditor.vue')['default']
+     RouterLink: typeof import('vue-router')['RouterLink']
+     RouterView: typeof import('vue-router')['RouterView']
+@@ -150,7 +153,9 @@ declare module 'vue' {
+     SettingsLayout: typeof import('./src/components/Layouts/SettingsLayout.vue')['default']
+     ShortcutTooltip: typeof import('./src/components/ShortcutTooltip.vue')['default']
+     SidebarLink: typeof import('./src/components/Sidebar/SidebarLink.vue')['default']
++    SignaturePad: typeof import('./src/components/SignaturePad.vue')['default']
+     SkeletonLoader: typeof import('./src/components/SkeletonLoader.vue')['default']
++    StageStepper: typeof import('./src/components/Assessments/StageStepper.vue')['default']
+     StudentLessonSidebar: typeof import('./src/components/StudentLessonSidebar.vue')['default']
+     StudentModal: typeof import('./src/components/Modals/StudentModal.vue')['default']
+     Tags: typeof import('./src/components/Tags.vue')['default']
+diff --git a/frontend/src/router.js b/frontend/src/router.js
+index 11f0ef5..f4dd1bb 100644
+--- a/frontend/src/router.js
++++ b/frontend/src/router.js
+@@ -147,6 +147,17 @@ const routes = [
+ 		name: 'CertifiedParticipants',
+ 		component: () => import('@/pages/CertifiedParticipants.vue'),
+ 	},
++	{
++		path: '/assessments',
++		name: 'AssessmentDashboard',
++		component: () => import('@/pages/Assessments/AssessmentDashboard.vue'),
++	},
++	{
++		path: '/assessments/:assessmentID',
++		name: 'AssessmentTaking',
++		component: () => import('@/pages/Assessments/AssessmentTaking.vue'),
++		props: true,
++	},
+ 	{
+ 		path: '/quizzes',
+ 		name: 'Quizzes',
+diff --git a/frontend/src/utils/index.js b/frontend/src/utils/index.js
+index b139179..2c41213 100644
+--- a/frontend/src/utils/index.js
++++ b/frontend/src/utils/index.js
+@@ -536,6 +536,15 @@ const getSidebarItems = (forMobile = false) => {
+ 					to: 'Courses',
+ 					activeFor: ['Courses', 'CourseDetail', 'Lesson'],
+ 				},
++				{
++					label: 'Assessments',
++					icon: 'ClipboardCheck',
++					to: 'AssessmentDashboard',
++					activeFor: ['AssessmentDashboard', 'AssessmentTaking'],
++					condition: () => {
++						return userResource?.data
++					},
++				},
+ 				{
+ 					label: 'Programs',
+ 					icon: 'Route',
