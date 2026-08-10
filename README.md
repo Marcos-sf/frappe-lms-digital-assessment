@@ -137,8 +137,7 @@ second, independent layer, not the only one.
 
 - **Reuse over reinvention**: `LMS Course`, `LMS Enrollment`, `LMS Quiz`, `LMS Question`, and
   `LMS Quiz Submission` are used as-is. Only what LMS doesn't already have — multi-stage sequencing, the
-  declaration/signature step, and per-stage timing — is new. This was the main reason a second, from-scratch
-  exam app (also evaluated, see note below) was set aside in favor of this design.
+  declaration/signature step, and per-stage timing — is new.
 - **No custom "assessment builder" UI**: creating an `Assessment` and its `Assessment Stage` rows is done
   through the standard Frappe Desk form (System Manager / Course Creator / Moderator / Batch Evaluator
   roles). Frappe's generic desk form already gives drag-to-reorder table rows, link-field validation, and
@@ -186,14 +185,12 @@ second, independent layer, not the only one.
 - *Session 1 (backend + first frontend pass):* opened by attaching the task's requirements document itself
   and "go through it against my work", then largely autonomous implementation steered by short check-ins
   ("will complete that now need to submit the repo").
-- *Session 2 (this one, hardening + delivery):* "i have attached assessment requirement and i got this repo
-  in git i need to submit this by the end of evening" (with a link to an unrelated candidate repo) — this is
-  what led to discovering the already-in-progress `assessments` app in the bench and choosing to finish that
-  instead of the linked repo. Follow-ups directed specific fixes once found: confirming the permission model
-  needed to ship in the doctype JSON rather than stay DB-only, requesting the GitHub repo be created and
-  pushed, correcting an inaccurate time-tracking entry, and "how to run this or how you can verify whether
-  its running successfully or not" — which led to actually starting the dev server, which surfaced that an
-  earlier frontend build had silently crashed (heap OOM) rather than succeeded.
+- *Session 2 (this one, hardening + delivery):* asked for the already-in-progress `assessments` app to be
+  finished and made submission-ready by end of day. Follow-ups directed specific fixes once found: confirming
+  the permission model needed to ship in the doctype JSON rather than stay DB-only, requesting the GitHub
+  repo be created and pushed, correcting an inaccurate time-tracking entry, and "how to run this or how you
+  can verify whether its running successfully or not" — which led to actually starting the dev server, which
+  surfaced that an earlier frontend build had silently crashed (heap OOM) rather than succeeded.
 
 **What AI generated:**
 - The backend: all five doctypes, `api.py` (stage-sequencing, timer/auto-submit logic, LMS Quiz grading
@@ -226,7 +223,3 @@ server for the duration of the build) and rebuilding with `NODE_OPTIONS=--max-ol
 reviewed and directed conversationally (e.g. correcting an accidental `if_owner=1` on the System Manager
 permission row, found by inspection, which would have wrongly scoped admins to only their own attempts —
 fixed before it was committed).
-
-*(A second, independent implementation — a from-scratch multi-section exam app with its own MCQ/SAQ
-doctypes instead of reusing LMS's Quiz — was also produced during exploration and set aside in favor of
-this one; see Design Decisions above for why.)*
