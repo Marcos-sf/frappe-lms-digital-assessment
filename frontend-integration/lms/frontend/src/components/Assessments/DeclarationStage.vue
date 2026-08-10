@@ -50,6 +50,9 @@
 			>
 				{{ __('Continue') }}
 			</Button>
+			<div v-if="!canSubmit && touched" class="text-sm text-ink-red-6">
+				{{ missingFieldsMessage }}
+			</div>
 		</div>
 	</div>
 </template>
@@ -76,6 +79,19 @@ const now = new Date().toLocaleString()
 const canSubmit = computed(
 	() => candidateName.value.trim() && signature.value && accepted.value
 )
+
+// Checking the box is the natural "I'm trying to submit" signal, so that's
+// when we start telling the student what else is still missing - showing it
+// earlier (e.g. as soon as the page loads) would just be noise.
+const touched = computed(() => accepted.value)
+
+const missingFieldsMessage = computed(() => {
+	const missing = []
+	if (!candidateName.value.trim()) missing.push(__('your name'))
+	if (!signature.value) missing.push(__('your signature'))
+	if (!missing.length) return ''
+	return __('Please add {0} above to continue.').format(missing.join(__(' and ')))
+})
 
 const submit = async () => {
 	submitting.value = true
