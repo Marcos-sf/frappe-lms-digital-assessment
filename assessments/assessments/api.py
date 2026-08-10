@@ -177,6 +177,34 @@ def _get_stage_duration_minutes(assessment_doc, stage_idx):
 	return None
 
 
+def _get_completion_status(attempt_doc):
+	"""Aggregate score/pass-fail across every graded Quiz stage of a Submitted attempt."""
+	quiz_submission_names = [
+		row.quiz_submission for row in attempt_doc.stage_progress if row.quiz_submission
+	]
+	if not quiz_submission_names:
+		return None
+
+	score = 0
+	score_out_of = 0
+	passed = True
+	for name in quiz_submission_names:
+		submission = frappe.db.get_value(
+			"LMS Quiz Submission",
+			name,
+			["score", "score_out_of", "percentage", "passing_percentage"],
+			as_dict=True,
+		)
+		if not submission:
+			continue
+		score += submission.score or 0
+		score_out_of += submission.score_out_of or 0
+		if (submission.percentage or 0) < (submission.passing_percentage or 0):
+			passed = False
+
+	return {"score": score, "score_out_of": score_out_of, "passed": passed}
+
+
 def _auto_submit_if_expired(attempt_doc):
 	if attempt_doc.status != "In Progress":
 		return False
@@ -359,6 +387,7 @@ def get_dashboard_assessments():
 			"Assessment Attempt", {"assessment": assessment.name, "member": user}, "name"
 		)
 		stage_deadline = None
+		completion_status = None
 		attempt = None
 
 		if attempt_name:
@@ -375,6 +404,8 @@ def get_dashboard_assessments():
 					stage_deadline = add_to_date(
 						current_row.started_at, minutes=duration, as_datetime=True
 					)
+			elif attempt_doc.status == "Submitted":
+				completion_status = _get_completion_status(attempt_doc)
 
 		result.append(
 			{
@@ -387,6 +418,7 @@ def get_dashboard_assessments():
 				"started_at": attempt.started_at if attempt else None,
 				"submitted_at": attempt.submitted_at if attempt else None,
 				"stage_deadline": stage_deadline,
+				"completion_status": completion_status,
 			}
 		)
 
