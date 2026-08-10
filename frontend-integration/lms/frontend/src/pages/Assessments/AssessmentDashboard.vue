@@ -44,6 +44,14 @@
 				>
 					{{ __('Time Remaining') }}: {{ timeRemaining(item.stage_deadline) }}
 				</div>
+				<div v-if="item.completion_status" class="flex items-center gap-2 text-sm">
+					<Badge :theme="item.completion_status.passed ? 'green' : 'red'">
+						{{ item.completion_status.passed ? __('Pass') : __('Fail') }}
+					</Badge>
+					<span class="text-ink-gray-6">
+						{{ item.completion_status.score }} / {{ item.completion_status.score_out_of }}
+					</span>
+				</div>
 				<Button
 					class="mt-auto"
 					:variant="item.status === 'Submitted' ? 'subtle' : 'solid'"
