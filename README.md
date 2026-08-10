@@ -182,15 +182,14 @@ second, independent layer, not the only one.
 **Tool used:** Claude Code (Anthropic), across two sessions on the same machine/bench.
 
 **Significant prompts:**
-- *Session 1 (backend + first frontend pass):* opened by attaching the task's requirements document itself
-  and "go through it against my work", then largely autonomous implementation steered by short check-ins
-  ("will complete that now need to submit the repo").
-- *Session 2 (this one, hardening + delivery):* asked for the already-in-progress `assessments` app to be
-  finished and made submission-ready by end of day. Follow-ups directed specific fixes once found: confirming
-  the permission model needed to ship in the doctype JSON rather than stay DB-only, requesting the GitHub
-  repo be created and pushed, correcting an inaccurate time-tracking entry, and "how to run this or how you
-  can verify whether its running successfully or not" — which led to actually starting the dev server, which
-  surfaced that an earlier frontend build had silently crashed (heap OOM) rather than succeeded.
+- *Session 1 (backend + first frontend pass):* started from the task's requirements document, then mostly
+  autonomous implementation steered by short direction-setting check-ins rather than line-by-line
+  instructions.
+- *Session 2 (this one, hardening + delivery):* asked to finish the already-in-progress `assessments` app and
+  make it submission-ready by end of day. Follow-up direction covered: fixing the permission model to ship
+  in the doctype JSON rather than stay database-only, creating and pushing the GitHub repo, correcting the
+  time-tracking entry, and a request to actually verify the app runs — which led to starting the dev server
+  and discovering an earlier frontend build had silently crashed (heap OOM) rather than succeeded.
 
 **What AI generated:**
 - The backend: all five doctypes, `api.py` (stage-sequencing, timer/auto-submit logic, LMS Quiz grading
