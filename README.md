@@ -182,6 +182,19 @@ second, independent layer, not the only one.
 
 **Tool used:** Claude Code (Anthropic), across two sessions on the same machine/bench.
 
+**Significant prompts:**
+- *Session 1 (backend + first frontend pass):* opened by attaching the task's requirements document itself
+  and "go through it against my work", then largely autonomous implementation steered by short check-ins
+  ("will complete that now need to submit the repo").
+- *Session 2 (this one, hardening + delivery):* "i have attached assessment requirement and i got this repo
+  in git i need to submit this by the end of evening" (with a link to an unrelated candidate repo) — this is
+  what led to discovering the already-in-progress `assessments` app in the bench and choosing to finish that
+  instead of the linked repo. Follow-ups directed specific fixes once found: confirming the permission model
+  needed to ship in the doctype JSON rather than stay DB-only, requesting the GitHub repo be created and
+  pushed, correcting an inaccurate time-tracking entry, and "how to run this or how you can verify whether
+  its running successfully or not" — which led to actually starting the dev server, which surfaced that an
+  earlier frontend build had silently crashed (heap OOM) rather than succeeded.
+
 **What AI generated:**
 - The backend: all five doctypes, `api.py` (stage-sequencing, timer/auto-submit logic, LMS Quiz grading
   integration, dashboard aggregation).
@@ -200,6 +213,14 @@ and silently broken for every student. This was caught by actually running the s
 (`bench execute assessments.dev_test_flow.run`) as the real student user rather than trusting that the
 doctype JSON matched what had been tested live, then confirmed by inspecting `Custom DocPerm` directly and
 diffing it against the JSON.
+
+A second one surfaced the same way: an earlier `yarn build` was reported as having finished, but the sidebar
+link it should have produced wasn't showing up when actually clicked in the browser. Re-reading the full
+build log (not just the tail, and not trusting the shell wrapper's reported exit code, which reflected the
+trailing `echo` rather than `yarn build` itself) showed the process had actually crashed with a JavaScript
+heap-out-of-memory error partway through — this machine's ~5.7GB RAM wasn't enough for a default Vite
+production build alongside everything else already running. Fixed by freeing memory (stopping the dev
+server for the duration of the build) and rebuilding with `NODE_OPTIONS=--max-old-space-size=3072`.
 
 **What was modified manually:** none of this code was hand-written outside of Claude Code; changes were
 reviewed and directed conversationally (e.g. correcting an accidental `if_owner=1` on the System Manager
