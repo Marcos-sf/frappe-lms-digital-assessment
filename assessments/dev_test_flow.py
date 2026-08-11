@@ -15,7 +15,7 @@ def run():
 	frappe.set_user(STUDENT_EMAIL)
 
 	attempt = api.start_assessment(assessment)
-	print(f"1. Started attempt: {attempt.name}, stage {attempt.current_stage_idx} ({attempt.stage_progress[0].stage_type})")
+	print(f"1. Started attempt: {attempt.name}, stage {attempt.current_stage_idx} ({attempt.stage_progress[attempt.current_stage_idx].stage_type})")
 
 	attempt = api.submit_declaration(
 		attempt.name, "Test Student", "data:image/png;base64,fake-signature-data", 1
@@ -27,8 +27,17 @@ def run():
 
 	for q in state["current_stage_questions"]:
 		if q["type"] == "Choices":
-			correct_option = q["options"][0]["text"]
-			answer_value = json.dumps([correct_option])
+			# The API deliberately never tells the student which option is
+			# correct, so look it up straight from the underlying LMS
+			# Question doc to build an answer that should score full marks.
+			quiz_question_doc = frappe.get_doc("LMS Quiz Question", q["quiz_question"])
+			question_doc = frappe.get_doc("LMS Question", quiz_question_doc.question)
+			correct_options = [
+				question_doc.get(f"option_{i}")
+				for i in range(1, 11)
+				if question_doc.get(f"is_correct_{i}")
+			]
+			answer_value = json.dumps(correct_options)
 		else:
 			answer_value = "int"
 		result = api.save_answer(attempt.name, attempt.current_stage_idx, q["quiz_question"], answer_value)
