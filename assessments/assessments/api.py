@@ -115,6 +115,12 @@ def submit_declaration(attempt, candidate_name, signature, declaration_accepted)
 	if not cint(declaration_accepted):
 		frappe.throw("You must accept the declaration to continue.")
 
+	if not (candidate_name or "").strip():
+		frappe.throw("Candidate name is required.")
+
+	if not (signature or "").strip():
+		frappe.throw("Signature is required.")
+
 	attempt_doc.candidate_name = candidate_name
 	attempt_doc.signature = signature
 	attempt_doc.declaration_accepted = 1
@@ -318,6 +324,8 @@ def _finalize_quiz_stage(attempt_doc, stage_idx, progress_row):
 		}
 	)
 
+	graded = []
+
 	for quiz_question in quiz.questions:
 		question_doc = frappe.get_doc("LMS Question", quiz_question.question)
 		submitted_value = answer_by_quiz_question.get(quiz_question.name, "")
@@ -339,8 +347,7 @@ def _finalize_quiz_stage(attempt_doc, stage_idx, progress_row):
 		else:
 			marks = 0
 
-		quiz_submission.append(
-			"result",
+		graded.append(
 			{
 				"question": question_doc.question,
 				"question_name": question_doc.name,
@@ -348,8 +355,35 @@ def _finalize_quiz_stage(attempt_doc, stage_idx, progress_row):
 				"marks": marks,
 				"marks_out_of": quiz_question.marks,
 				"is_correct": is_correct,
-			},
+			}
 		)
+
+	# LMS Quiz Submission's `score` is always the sum of these result rows, and its
+	# `percentage` is mandatory and non-negative. Negative marking can legitimately
+	# drive the raw total below zero, so once every row is graded, soften just
+	# enough of the negative rows (against the true final total, not interleaved
+	# with it) to floor the quiz's total score at 0 without changing its sign or
+	# any row's grading outcome.
+	deficit = -sum(row["marks"] for row in graded)
+	if deficit > 0:
+		for row in graded:
+			if deficit <= 0:
+				break
+			if row["marks"] < 0:
+				offset = min(deficit, -row["marks"])
+				row["marks"] += offset
+				deficit -= offset
+
+	total_marks = 0
+	for row in graded:
+		total_marks += row["marks"]
+		quiz_submission.append("result", row)
+
+	# LMS's own percentage calculation only runs when the score is truthy, so a
+	# 0 score (an all-Open-Ended quiz awaiting grading, or a fully floored
+	# negative-marking result) would otherwise leave the mandatory `percentage`
+	# field unset and fail this insert.
+	quiz_submission.percentage = (total_marks / quiz.total_marks) * 100 if quiz.total_marks else 0
 
 	quiz_submission.insert(ignore_permissions=True)
 	progress_row.quiz_submission = quiz_submission.name
